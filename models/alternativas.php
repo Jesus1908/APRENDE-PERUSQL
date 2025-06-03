@@ -1,54 +1,30 @@
 <?php
 require_once './config/conexion.php'; 
 
-class Alternativa {
-    private $conn;
-    private $table = 'ALTERNATIVA';
+class alternativa {
+    private $pdo;
 
-    // Propiedades del objeto
-    public $idalternativa;
-    public $texto;
-    public $es_correcta;
-
-    public function __construct($db) {
-        $this->conn = $db;
+    public function __construct($pdo) {
+        $this->pdo = $pdo;
     }
 
-    // Método para crear una nueva alternativa
-    public function create() {
-        $query = 'INSERT INTO ' . $this->table . ' 
-                 (texto, es_correcta)
-                 VALUES
-                 (:texto, :es_correcta)';
+    public function create($data) {
+        $sql = "INSERT INTO ALTERNATIVA (texto, es_correcta) VALUES (?, ?)";
+        $stmt = $this->pdo->prepare($sql);
 
-        $stmt = $this->conn->prepare($query);
+        $texto = strip_tags($data['texto']);
+        $es_correcta = filter_var($data['es_correcta'], FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
 
-        $this->texto = htmlspecialchars(strip_tags($this->texto));
-        $this->es_correcta = filter_var($this->es_correcta, FILTER_VALIDATE_BOOLEAN);
-
-        $stmt->bindParam(':texto', $this->texto);
-        $stmt->bindParam(':es_correcta', $this->es_correcta, PDO::PARAM_BOOL);
-
-        if($stmt->execute()) {
-            return $this->conn->lastInsertId(); 
-        }
-        printf("Error: %s.\n", $stmt->error);
-        return false;
+        return $stmt->execute([$texto, $es_correcta]);
     }
 
-    // Método para obtener todas las alternativas
     public function getAll() {
-        $query = 'SELECT 
-                    idalternativa, 
-                    texto, 
-                    es_correcta 
-                 FROM ' . $this->table . ' 
-                 ORDER BY idalternativa ASC';
-
-        $stmt = $this->conn->prepare($query);
+        $sql = "SELECT * FROM ALTERNATIVA ORDER BY idalternativa ASC";
+        $stmt = $this->pdo->prepare($sql);
         $stmt->execute();
 
-        return $stmt;
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
 ?>
+

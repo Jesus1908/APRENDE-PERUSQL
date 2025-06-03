@@ -1,28 +1,28 @@
 <?php
 class Database
 {
-    private $host = 'localhost';
-    private $db_name = 'aprende_peru';
+    private $host = '127.0.0.1';
+    private $db_name = 'aprendeperu';
     private $username = 'root';
     private $password = '';
-    private $conn;
+    private $conection;
 
     public function getConnection()
     {
-        $this->conn = null;
+        $this->conection = null;
 
         try {
-            $this->conn = new PDO(
+            $this->conection = new PDO(
                 "mysql:host=" . $this->host . ";dbname=" . $this->db_name,
                 $this->username,
                 $this->password
             );
-            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $this->conn->exec("set names utf8mb4");
+            $this->conection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $this->conection->exec("set names utf8mb4");
         } catch (PDOException $exception) {
             echo "Error de conexión: " . $exception->getMessage();
         }
 
-        return $this->conn;
+        return $this->conection;
     }
 }

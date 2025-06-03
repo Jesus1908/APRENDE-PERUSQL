@@ -1,60 +1,33 @@
 <?php
-require_once 'config/database.php';
+require_once './config/conexion.php';
 
 class Pregunta {
-    private $conn;
-    private $table = 'PREGUNTA';
+    private $pdo;
 
-    // Propiedades del objeto
-    public $idpregunta;
-    public $enunciado;
-    public $valor;
-    public $idalternativa_correcta;
-
-    public function __construct($db) {
-        $this->conn = $db;
+    public function __construct($pdo) {
+        $this->pdo = $pdo;
     }
 
-    // Método para crear una nueva pregunta
-    public function create() {
-        $query = 'INSERT INTO ' . $this->table . ' 
-                 (enunciado, valor, idalternativa_correcta)
-                 VALUES
-                 (:enunciado, :valor, :idalternativa_correcta)';
+    // Crear una nueva pregunta
+    public function create($data) {
+        $sql = "INSERT INTO PREGUNTA (enunciado, valor, idalternativa_correcta) VALUES (?, ?, ?)";
+        $stmt = $this->pdo->prepare($sql);
 
-        $stmt = $this->conn->prepare($query);
+        // Sanitizar enunciado y validar valores
+        $enunciado = strip_tags($data['enunciado']);
+        $valor = floatval($data['valor']);
+        $idalternativa_correcta = intval($data['idalternativa_correcta']);
 
-        $this->enunciado = htmlspecialchars(strip_tags($this->enunciado));
-        $this->valor = (float)$this->valor;
-        $this->idalternativa_correcta = (int)$this->idalternativa_correcta;
-
-        $stmt->bindParam(':enunciado', $this->enunciado);
-        $stmt->bindParam(':valor', $this->valor);
-        $stmt->bindParam(':idalternativa_correcta', $this->idalternativa_correcta);
-
-        if($stmt->execute()) {
-            return $this->conn->lastInsertId(); 
-        }
-        printf("Error: %s.\n", $stmt->error);
-        return false;
+        return $stmt->execute([$enunciado, $valor, $idalternativa_correcta]);
     }
 
+    // Obtener todas las preguntas
     public function getAll() {
-        $query = 'SELECT 
-                    p.idpregunta, 
-                    p.enunciado, 
-                    p.valor,
-                    a.idalternativa,
-                    a.texto as alternativa_correcta,
-                    a.es_correcta
-                 FROM ' . $this->table . ' p
-                 LEFT JOIN ALTERNATIVA a ON p.idalternativa_correcta = a.idalternativa
-                 ORDER BY p.idpregunta ASC';
-
-        $stmt = $this->conn->prepare($query);
+        $sql = "SELECT * FROM PREGUNTA ORDER BY idpregunta ASC";
+        $stmt = $this->pdo->prepare($sql);
         $stmt->execute();
 
-        return $stmt;
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
 ?>
